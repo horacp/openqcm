@@ -33,7 +33,7 @@ class Constants:
     ##########################
     # Application Parameters #
     ##########################
-    app_title = "Real-Time openQCM GUI"
+    app_title = "Real-Time openQCM GUI FZU"
     app_version = '2.1'
     app_sources = ["Measurement openQCM Q-1 Device", "Calibration openQCM Q-1 Device"]#, "Socket Client"]
     app_encoding = "utf-8"
@@ -113,8 +113,8 @@ class Constants:
     # 10MHz 
     #--------------
     # left and right frequencies
-    L10_fundamental = 7500
-    R10_fundamental = 2500
+    L10_fundamental = 7500 + 5000 # expand the sweep range of 5 KHz on the left
+    R10_fundamental = 2500 + 5000 # expand the sweep range of 5 kHz on the right
     # Savitzky-Golay size of the data window 
     SG_window_size10_fundamental = 11
     # Spline smoothing factor

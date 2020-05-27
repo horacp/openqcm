@@ -796,7 +796,7 @@ class MainWindow(QtGui.QMainWindow):
     # Updates the source and depending boxes on change
     ###########################################################################  
     def _source_changed(self):
-        
+        import os;
         # It is connected to the indexValueChanged signal of the Source ComboBox.
         if self._get_source() == SourceType.serial:
            print(TAG, "Scanning the source: {}".format(Constants.app_sources[0]))  # self._get_source().name
@@ -816,6 +816,11 @@ class MainWindow(QtGui.QMainWindow):
 
         if ports is not None:
             self.ControlsWin.ui1.cBox_Port.addItems(ports)
+            currdir = os.getcwd()
+            print(TAG, currdir)
+            currport = int(currdir[-1]) - 1
+            print(TAG, currport)
+            self.ControlsWin.ui1.cBox_Port.setCurrentIndex(currport)
         if speeds is not None:
             self.ControlsWin.ui1.cBox_Speed.addItems(speeds)
         if self._get_source() == SourceType.serial:

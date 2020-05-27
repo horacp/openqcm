@@ -383,6 +383,8 @@ class CalibrationProcess(multiprocessing.Process):
             ports_avaiable = list(list_ports.comports())
             for port in ports_avaiable:
                 if port[2].startswith("USB VID:PID=16C0:0483"):
+                    # print(TAG,"Calibration ports found :o)")
+                    # print(TAG,*port)
                     found = True
                     port_connected.append(port[0])
                 #else:

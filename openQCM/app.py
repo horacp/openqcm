@@ -50,7 +50,7 @@ class OPENQCM:
         if Architecture.is_python_version(MinimalPython.major, minor=MinimalPython.minor):
             print(TAG,"Path:",os.path.dirname(__file__)) #add
             print('')
-            print(TAG,"Application started")
+            print(TAG,"Application started :o)")
             Log.i(TAG, "Application started")
             win = mainWindow.MainWindow(samples=self._args.get_user_samples())
             #win.setWindowTitle("{} - {}".format(Constants.app_title, Constants.app_version))

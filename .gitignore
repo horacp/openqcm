@@ -1,0 +1,6 @@
+logged_data
+openQCM/__pycache__
+openQCM/common/__pycache__
+openQCM/core/__pycache__
+openQCM/processors/__pycache__
+openQCM/ui/__pycache__

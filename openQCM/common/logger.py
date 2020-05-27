@@ -79,9 +79,9 @@ class Logger:
     @staticmethod
     def _show_user_info():
         tag = ""#"[User]"
-        print("-----------------------------")
+        print("---------------------------------")
         print(" {} - {}".format(Constants.app_title,Constants.app_version))
-        print("-----------------------------")
+        print("---------------------------------")
         print("\n{} SYSTEM INFORMATIONS:".format(tag))
         print(tag,"Platform: {}".format(Architecture.get_os_name()))
         Logger.i(tag, "Platform: {}".format(Architecture.get_os_name()))
