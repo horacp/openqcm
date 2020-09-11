@@ -1,4 +1,7 @@
 logged_data
+openQCM/Calibration_5MHz.txt
+openQCM/Calibration_10MHz.txt
+openQCM/PeakFrequencies.txt
 openQCM/__pycache__
 openQCM/common/__pycache__
 openQCM/core/__pycache__
