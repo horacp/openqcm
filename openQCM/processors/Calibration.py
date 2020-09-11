@@ -311,6 +311,9 @@ class CalibrationProcess(multiprocessing.Process):
                     path = Constants.cvs_peakfrequencies_path
                     path_calib = Constants.csv_calibration_path10
                     filename_calib = Constants.csv_calibration_filename10  #
+                    logpath = Constants.cvs_peakfrequencies_logpath
+                    logpath_calib = Constants.csv_calibration_logpath10
+                    logfilename_calib = Constants.csv_calibration_logfilename10  #
 		        
 		        # CHECKS the exceptions
                 if self._flag == 0:
@@ -332,8 +335,10 @@ class CalibrationProcess(multiprocessing.Process):
                         # SAVES independently of the state of the export box
                         print(TAG,"Saving data in file...")
                         np.savetxt(path, np.column_stack([max_freq_mag,max_freq_phase]))
+                        np.savetxt(logpath, np.column_stack([max_freq_mag,max_freq_phase]))
                         print(TAG, "Peak frequencies for {} saved in: {}".format(self._QCStype,path))
                         FileStorage.TXT_sweeps_save(filename_calib, Constants.csv_calibration_export_path, readFREQ, temp1, temp2)
+                        FileStorage.TXT_sweeps_save(logfilename_calib, Constants.csv_calibration_export_logpath, readFREQ, temp1, temp2)
                         print(TAG, "Calibration for {} saved in: {}".format(self._QCStype,path_calib))
                      else:
                         #print('a',max_freq_mag, max_freq_phase)

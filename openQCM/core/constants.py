@@ -158,8 +158,8 @@ class Constants:
     ##################
     # Log parameters #
     ##################
-    log_export_path = "logged_data"
-    log_filename = "{}.log".format(app_title)
+    # log_export_path = "logged_data"
+    # log_filename = "{}.log".format(app_title)
     log_max_bytes = 5120
     log_default_level = 1
     log_default_console_log = False
@@ -187,17 +187,25 @@ class Constants:
     csv_calibration_filename    = "Calibration_5MHz"
     csv_calibration_filename10  = "Calibration_10MHz"
     csv_calibration_export_path = "openQCM" #"common"
+    csv_calibration_logfilename10  = csv_filename + "_Calibration_10MHz"
+    csv_calibration_export_logpath = "debug_data" #"openQCM" #"common"
+    csv_debug_export_path = "{}{}{}".format(csv_calibration_export_logpath,slash,csv_filename)
+    log_export_path = csv_calibration_export_logpath
+    log_filename = "{}.log".format(csv_filename)
     
     ################## 
     # Calibration: baseline correction (READ for @5MHz and @10MHz QCS) path: 'common\'
     csv_calibration_path   = "{}{}{}.{}".format(csv_calibration_export_path,slash,csv_calibration_filename,txt_extension)
     csv_calibration_path10 = "{}{}{}.{}".format(csv_calibration_export_path,slash,csv_calibration_filename10,txt_extension)
+    csv_calibration_logpath10 = "{}{}{}.{}".format(csv_calibration_export_logpath,slash,csv_calibration_logfilename10,txt_extension)
     
     # Frequencies: Fundamental and overtones (READ and WRITE for @5MHz and @10MHz QCS)
     csv_peakfrequencies_filename   = "PeakFrequencies"
+    csv_peakfrequencies_logfilename   = csv_filename + "_PeakFrequencies"
     #csv_peakfrequencies_filename   = "PeakFrequencies_5MHz"
     #csv_peakfrequencies_filename10 = "PeakFrequencies_10MHz"
     cvs_peakfrequencies_path    = "{}{}{}.{}".format(csv_calibration_export_path,slash,csv_peakfrequencies_filename,txt_extension)
+    cvs_peakfrequencies_logpath    = "{}{}{}.{}".format(csv_calibration_export_logpath,slash,csv_peakfrequencies_logfilename,txt_extension)
     #cvs_peakfrequencies_path10 = "{}{}{}.{}".format(csv_calibration_export_path,slash,csv_peakfrequencies_filename10,txt_extension)    
     #########################    
     '''

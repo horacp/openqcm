@@ -388,6 +388,7 @@ class SerialProcess(multiprocessing.Process):
     # Reads the serial port,processes and adds all the data to internal queues
     ###########################################################################
     def run(self):
+        index_counter = 0
         """
         The expected format is a buffer (sweep) and a new buffer as a new sweep. 
         The method parses data, converts each value to float and adds to a queue. 
@@ -463,8 +464,13 @@ class SerialProcess(multiprocessing.Process):
                          #if '\n' in buffer:
                          if 's' in buffer:
                               break
+                        # f = open("test_output_{}.txt".format(index_counter), "w")
+                        f = open(Constants.csv_debug_export_path + "_fdebug_" + str(index_counter) + ".txt", "w")
+                        f.write(buffer)
+                        f.close()
                         data_raw = buffer.split('\n')
                         length = len(data_raw)
+                        index_counter += 1
                         
                         # PERFORMS split with the semicolon delimiter
                         for i in range (length):

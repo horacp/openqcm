@@ -1,4 +1,6 @@
 logged_data
+debug_data
+openQCM/*.txt
 openQCM/Calibration_5MHz.txt
 openQCM/Calibration_10MHz.txt
 openQCM/PeakFrequencies.txt
