@@ -465,7 +465,7 @@ class SerialProcess(multiprocessing.Process):
                          if 's' in buffer:
                               break
                         # f = open("test_output_{}.txt".format(index_counter), "w")
-                        f = open(Constants.csv_debug_export_path + "_fdebug_" + str(index_counter) + ".txt", "w")
+                        f = open(Constants.csv_debug_export_path + "_fdebug_" + str(format(index_counter, '06d')) + ".txt", "w")
                         f.write(buffer)
                         f.close()
                         data_raw = buffer.split('\n')
