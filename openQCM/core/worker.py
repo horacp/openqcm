@@ -47,10 +47,11 @@ class Worker:
         # data buffers
         self._data1_buffer = None 
         self._data2_buffer = None 
-        self._d1_buffer = None 
-        self._d2_buffer = None
-        self._d3_buffer = None
-        self._t1_buffer = None 
+        self._d1_buffer = None # frequency 
+        self._d2_buffer = None # dissipation
+        self._d3_buffer = None # temperature
+        # self._d4_buffer = None # DEBUG frequency 2 
+        self._t1_buffer = None
         self._t2_buffer = None
         self._t3_buffer = None
         self._ser_error1 = 0
@@ -232,6 +233,7 @@ class Worker:
         self._d2_store = data[1] # data
         self._t2_buffer.append(data[0])
         self._d2_buffer.append(data[1])
+        # self._d4_buffer.append(data[1] + 10)
     
     #####
     def _queue_data5(self,data):
@@ -282,6 +284,11 @@ class Worker:
     def get_d2_buffer(self):
         #:return: float list.
         return self._d2_buffer.get_all()
+    
+    # #####
+    # def get_d4_buffer(self):
+    #     #:return: float list.
+    #     return self._d4_buffer.get_all()
     
     ##### Gets time buffers
     def get_t2_buffer(self):
@@ -396,9 +403,10 @@ class Worker:
         #self._t3_buffer = []  # time (temperature)
 
         # Initialises supporting variables
-        self._d1_store = 0
-        self._d2_store = 0
-        self._d3_store = 0
+        self._d1_store = 0 # Resonance frequency 
+        self._d2_store = 0 # Dissipation
+        self._d3_store = 0 # temperature
+        # self._d4_store = 0 # DEBUG Frequency 2
         self._t1_store = 0
         self._t2_store = 0
         self._t3_store = 0
@@ -410,6 +418,7 @@ class Worker:
         self._d1_buffer = RingBuffer(Constants.ring_buffer_samples)  # Resonance frequency 
         self._d2_buffer = RingBuffer(Constants.ring_buffer_samples)  # Dissipation
         self._d3_buffer = RingBuffer(Constants.ring_buffer_samples)  # temperature
+        # self._d4_buffer = RingBuffer(Constants.ring_buffer_samples)  # DEBUG Frequency 2
         self._t1_buffer = RingBuffer(Constants.ring_buffer_samples)  # time (Resonance frequency)
         self._t2_buffer = RingBuffer(Constants.ring_buffer_samples)  # time (Dissipation)
         self._t3_buffer = RingBuffer(Constants.ring_buffer_samples)  # time (temperature)

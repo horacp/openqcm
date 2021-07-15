@@ -253,6 +253,7 @@ class Ui_Plots(object):
         
         self.plt = GraphicsLayoutWidget(self.centralwidget)
         self.pltB = GraphicsLayoutWidget(self.centralwidget)
+        # self.pltC = GraphicsLayoutWidget(self.centralwidget)
         
         self.plt.setAutoFillBackground(False)
         self.plt.setStyleSheet("border: 0px;")
@@ -268,12 +269,19 @@ class Ui_Plots(object):
         self.pltB.setLineWidth(0)
         self.pltB.setObjectName("pltB")
         
-        self.label = QtWidgets.QLabel()
-        self.Layout_graphs.addWidget(self.label, 0, 0, 1, 1)
-        def link1(linkStr):
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl(linkStr))
-        self.label.linkActivated.connect(link1)
-        self.label.setText('<a href="https://openqcm.com/"> <font color=#000000 >Open-source Python application for displaying, processing and storing real-time data from openQCM Q-1 Device</font> </a>')
+        # self.pltC.setAutoFillBackground(False)
+        # self.pltC.setStyleSheet("border: 0px;")
+        # self.pltC.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # self.pltC.setFrameShadow(QtWidgets.QFrame.Plain)
+        # self.pltC.setLineWidth(0)
+        # self.pltC.setObjectName("pltC")
+        
+        # self.label = QtWidgets.QLabel()
+        # self.Layout_graphs.addWidget(self.label, 0, 0, 1, 1)
+        # def link1(linkStr):
+        #     QtGui.QDesktopServices.openUrl(QtCore.QUrl(linkStr))
+        # self.label.linkActivated.connect(link1)
+        # self.label.setText('<a href="https://openqcm.com/"> <font color=#000000 >Open-source Python application for displaying, processing and storing real-time data from openQCM Q-1 Device</font> </a>')
         
         self.Layout_graphs.addWidget(self.plt, 1, 0, 1, 1)
         self.Layout_graphs.addWidget(self.pltB, 2, 0, 1, 1)

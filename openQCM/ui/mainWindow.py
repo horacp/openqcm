@@ -6,7 +6,7 @@ from openQCM.ui.mainWindow_ui import Ui_Controls, Ui_Info, Ui_Plots
 
 from pyqtgraph import AxisItem
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 from openQCM.core.worker import Worker
 from openQCM.core.constants import Constants, SourceType, DateAxis, NonScientificAxis
 from openQCM.ui.popUp import PopUp
@@ -20,7 +20,7 @@ TAG = ""#"[MainWindow]"
 # Package that handles the UIs elements and connects to worker service to execute processes
 ##########################################################################################
 
-class PlotsWindow(QtGui.QMainWindow):
+class PlotsWindow(QtWidgets.QMainWindow):
      
     def __init__(self, samples=Constants.argument_default_samples):
         super().__init__()  
@@ -43,7 +43,7 @@ class PlotsWindow(QtGui.QMainWindow):
 
     
 #------------------------------------------------------------------------------
-class InfoWindow(QtGui.QMainWindow):    
+class InfoWindow(QtWidgets.QMainWindow):    
     
     def __init__(self, samples=Constants.argument_default_samples):
         super().__init__()
@@ -64,7 +64,7 @@ class InfoWindow(QtGui.QMainWindow):
            event.ignore()    
 
 #------------------------------------------------------------------------------
-class ControlsWindow(QtGui.QMainWindow):    
+class ControlsWindow(QtWidgets.QMainWindow):    
     
     def __init__(self, samples=Constants.argument_default_samples):
         super().__init__()
@@ -76,13 +76,13 @@ class ControlsWindow(QtGui.QMainWindow):
         res =PopUp.question(self, Constants.app_title, "Are you sure you want to quit openQCM application now?")
         if res: 
            #self.close()
-           QtGui.QApplication.quit()
+           QtWidgets.QApplication.quit()
         else:
            event.ignore()
 
 #------------------------------------------------------------------------------
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     
     ###########################################################################
     # Initializes methods, values and sets the UI
@@ -91,7 +91,7 @@ class MainWindow(QtGui.QMainWindow):
         
         #:param samples: Default samples shown in the plot :type samples: int.
         # to be always placed at the beginning, initializes some important methods
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         
         # Sets up the user interface from the generated Python script using Qt Designer
         # Instantiates Ui classes
@@ -108,11 +108,12 @@ class MainWindow(QtGui.QMainWindow):
         self.InfoWin.show()
 
         # Shared variables, initial values
-        self._plt0 = None
-        self._plt1 = None
-        self._plt2 = None
-        self._plt3 = None
-        self._plt4 = None
+        self._plt0 = None # amplitude
+        self._plt1 = None # phase
+        self._plt2 = None # frequency
+        self._plt3 = None # dissipation
+        self._plt4 = None # temperature
+        # self._plt5 = None # DEBUG frequency
         self._timer_plot = None
         self._readFREQ = None
         self._QCS_installed = None
@@ -130,6 +131,7 @@ class MainWindow(QtGui.QMainWindow):
         self._vector_reference_dissipation = None
         self._vector_1 = None
         self._vector_2 = None   
+        # self._vector_3 = None   
         
         # Instantiates a Worker class 
         self.worker = Worker()
@@ -380,25 +382,30 @@ class MainWindow(QtGui.QMainWindow):
         self._plt3.setLabel('bottom', 'Time (hh:mm:ss)',units='')
         self._plt3.setLabel('left', 'Dissipation', units='')
         '''
+        # self._plt5 = pg.ViewBox()  
+        # self._plt2.scene().addItem(self._plt5)
+        # self._plt5.setXLink(self._plt2)
+        # self._plt5.setYLink(self._plt2)
+
         #---------------------------------------------------------------------------------------------------------------
         # Configures text comment and info
         self._plt2.clear()
-        self._text1 = pg.TextItem('',(255, 255, 255), anchor=(0.5, 0.5))
-        self._text1.setHtml("<span style='font-size: 14pt'>Welcome to the real-time openQCM Q-1 device GUI </span>")
-        self._text2 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
-        self._text2.setHtml("<span style='font-size: 10pt'>Please do not forget, if needed, to calibrate (in air) your device with the properly selected quartz before starting. </span>")
-        self._text3 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
-        self._text3.setHtml("<span style='font-size: 10pt'>Please check the command line on the side for useful information. </span>")
-        self._text4 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
-        self._text4.setHtml("<span style='font-size: 10pt'>(https://openqcm.com - info@openqcm.com) </span>")
-        self._text1.setPos(0.5,0.6)
-        self._text2.setPos(0.5,0.3)
-        self._text3.setPos(0.5,0.2)
-        self._text4.setPos(0.5,0.1)
-        self._plt2.addItem(self._text1, ignoreBounds=True)
-        self._plt2.addItem(self._text2, ignoreBounds=True)
-        self._plt2.addItem(self._text3, ignoreBounds=True)
-        self._plt2.addItem(self._text4, ignoreBounds=True)
+        # self._text1 = pg.TextItem('',(255, 255, 255), anchor=(0.5, 0.5))
+        # self._text1.setHtml("<span style='font-size: 14pt'>Welcome to the real-time openQCM Q-1 device GUI </span>")
+        # self._text2 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
+        # self._text2.setHtml("<span style='font-size: 10pt'>Please do not forget, if needed, to calibrate (in air) your device with the properly selected quartz before starting. </span>")
+        # self._text3 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
+        # self._text3.setHtml("<span style='font-size: 10pt'>Please check the command line on the side for useful information. </span>")
+        # self._text4 = pg.TextItem('',(250, 250, 250), anchor=(0.5, 0.5))
+        # self._text4.setHtml("<span style='font-size: 10pt'>(https://openqcm.com - info@openqcm.com) </span>")
+        # self._text1.setPos(0.5,0.6)
+        # self._text2.setPos(0.5,0.3)
+        # self._text3.setPos(0.5,0.2)
+        # self._text4.setPos(0.5,0.1)
+        # self._plt2.addItem(self._text1, ignoreBounds=True)
+        # self._plt2.addItem(self._text2, ignoreBounds=True)
+        # self._plt2.addItem(self._text3, ignoreBounds=True)
+        # self._plt2.addItem(self._text4, ignoreBounds=True)
         #######################
         #self._lr = pg.LinearRegionItem(orientation=pg.LinearRegionItem.Horizontal)
         #self._inf1 = pg.InfiniteLine(movable=True, angle=0, label='x={value:0.2f}', 
@@ -687,6 +694,7 @@ class MainWindow(QtGui.QMainWindow):
             def updateViews2():
                 self._plt2.clear()
                 self._plt3.clear()
+                # self._plt5.clear()
                 self._plt3.setGeometry(self._plt2.vb.sceneBoundingRect())
                 self._plt3.linkedViewChanged(self._plt2.vb, self._plt3.XAxis)
             
@@ -706,6 +714,8 @@ class MainWindow(QtGui.QMainWindow):
                self._plt3.setLimits(yMax=self._vector_reference_dissipation[-1],yMin=self._vector_reference_dissipation[0], minYRange=1e-7) 
                self._plt4.setLimits(yMax=50,yMin=-10)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_2,pen=Constants.plot_colors[7]))
+            # self._vector_3 = np.array(self.worker.get_d4_buffer())-self._reference_value_dissipation 
+            # self._plt5.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_3,pen=Constants.plot_colors[4]))
             
             ###################################################################
             # Temperature plot
@@ -750,6 +760,7 @@ class MainWindow(QtGui.QMainWindow):
             def updateViews2():
                 self._plt2.clear()
                 self._plt3.clear()
+                # self._plt5.clear()
                 self._plt3.setGeometry(self._plt2.vb.sceneBoundingRect())
                 self._plt3.linkedViewChanged(self._plt2.vb, self._plt3.XAxis)
             # updates for multiple plot y-axes
@@ -769,6 +780,7 @@ class MainWindow(QtGui.QMainWindow):
                self._plt3.setLimits(yMax=(self._readFREQ[-1]-self._readFREQ[0])/self._readFREQ[0],yMin=0, minYRange=1e-6)
                self._plt4.setLimits(yMax=50,yMin=-10, minYRange=0.5)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self.worker.get_d2_buffer(),pen=Constants.plot_colors[3]))
+            # self._plt5.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self.worker.get_d4_buffer(),pen=Constants.plot_colors[4]))
             
             ##############################
             # Add  lines with labels
@@ -848,6 +860,7 @@ class MainWindow(QtGui.QMainWindow):
                 self._plt2.clear()
                 self._plt3.clear()
                 self._plt4.clear()
+                # self._plt5.clear()
         
         
     ###########################################################################
