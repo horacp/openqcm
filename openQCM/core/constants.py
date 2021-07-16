@@ -43,7 +43,7 @@ class Constants:
     # PLOT parameters #
     ###################
     plot_update_ms = 200#16
-    plot_colors = ['#ff0000', '#0072bd', '#00ffff', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f'] 
+    plot_colors = ['#ff0000', '#0072bd', '#00ffff', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f','#ffff00'] 
     plot_max_lines = len(plot_colors)
     
     

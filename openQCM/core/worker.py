@@ -37,16 +37,21 @@ class Worker:
         :param export_path: If specified, defines where the data will be exported :type export_path: str.
         """
         # data queues 
-        self._queue1 = Queue()
-        self._queue2 = Queue()
-        self._queue3 = Queue()
-        self._queue4 = Queue()
-        self._queue5 = Queue()
-        self._queue6 = Queue()
+        self._queue1 = Queue() # Frequency
+        self._queue2 = Queue() # Amplitude
+        self._queue3 = Queue() # Magnitude
+        self._queue4 = Queue() # Phase
+        self._queue5 = Queue() # Temperature
+        self._queue6 = Queue() # Errors
         
+        # DEBUG
+        self._queue1b = Queue() # Frequency
+        self._data1b_buffer = None 
+        # /DEBUG
+
         # data buffers
-        self._data1_buffer = None 
-        self._data2_buffer = None 
+        self._data1_buffer = None # Amplitude
+        self._data2_buffer = None # Phase
         self._d1_buffer = None # frequency 
         self._d2_buffer = None # dissipation
         self._d3_buffer = None # temperature
@@ -98,7 +103,9 @@ class Worker:
         # Setup/reset the internal buffers
         self.reset_buffers(self._samples)
         # Instantiates process
-        self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6)
+        # self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6)
+        # DEBUG
+        self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6,self._queue1b)
         # Checks the type of source
         if self._source == SourceType.serial:
             self._acquisition_process = SerialProcess(self._parser_process)
@@ -201,6 +208,12 @@ class Worker:
         # queue3 for elaborated data: errors
         while not self._queue6.empty():
             self._queue_data6(self._queue6.get(False))
+    
+    # DEBUG
+    def consume_queue1b(self):
+        # queue1b for serial data: DEBUG amplitude
+        while not self._queue1b.empty():
+            self._queue_data1b(self._queue1b.get(False))
             
     ###########################################################################
     # Adds data to internal buffers.
@@ -257,7 +270,12 @@ class Worker:
         self._ser_error2 = data[1]
         self._control_k = data[2]
         self._ser_err_usb = data[3]
-        
+
+    # DEBUG
+    def _queue_data1b(self,data):
+        #:param data: values to add for serial data: amplitude :type data: float.
+        self._data1b_buffer = data
+       
     ###########################################################################
     # Gets data buffers for plot (Amplitude,Phase,Frequency and Dissipation) 
     ###########################################################################        
@@ -310,6 +328,11 @@ class Worker:
         #:return: float list.
         return self._ser_error1,self._ser_error2, self._control_k, self._ser_err_usb
     
+    # DEBUG
+    def get_value1b_buffer(self):
+        #:return: float list.
+        return self._data1b_buffer
+
 
     ###########################################################################
     # Exports data in csv and/or txt file if export box is checked
@@ -401,6 +424,9 @@ class Worker:
         #self._t1_buffer = []  # time (Resonance frequency)
         #self._t2_buffer = []  # time (Dissipation)
         #self._t3_buffer = []  # time (temperature)
+
+        # DEBUG
+        self._data1b_buffer = np.zeros(samples) # amplitude
 
         # Initialises supporting variables
         self._d1_store = 0 # Resonance frequency 

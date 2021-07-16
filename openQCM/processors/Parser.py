@@ -18,7 +18,8 @@ class ParserProcess(multiprocessing.Process):
                        data_queue3,
                        data_queue4,
                        data_queue5,
-                       data_queue6):
+                       data_queue6,
+                       data_queue1b):
         """
         :param data_queue{i}: References to queue where processed data will be put.
         :type data_queue{i}: multiprocessing Queue.
@@ -32,6 +33,10 @@ class ParserProcess(multiprocessing.Process):
         self._out_queue4 = data_queue4
         self._out_queue5 = data_queue5
         self._out_queue6 = data_queue6
+
+        # DEBUG
+        self._out_queue1b = data_queue1b
+        
 
         #print(TAG, 'Process ready')
         #Log.d(TAG, "Process ready")
@@ -65,7 +70,7 @@ class ParserProcess(multiprocessing.Process):
         
     def add4(self, data):
         """
-        Adds new processed data to internal queue3 (Q-factor/dissipation).
+        Adds new processed data to internal queue4 (Q-factor/dissipation).
         :param data: Calculated data.
         :type data: float.
         """
@@ -73,7 +78,7 @@ class ParserProcess(multiprocessing.Process):
         
     def add5(self, data):
         """
-        Adds new processed data to internal queue3 (Q-factor/dissipation).
+        Adds new processed data to internal queue5 (Temperature).
         :param data: Calculated data.
         :type data: float.
         """
@@ -81,12 +86,21 @@ class ParserProcess(multiprocessing.Process):
     
     def add6(self, data):
         """
-        Adds new processed data to internal queue3 (Q-factor/dissipation).
+        Adds new processed data to internal queue6 (???).
         :param data: Calculated data.
         :type data: float.
         """
         self._out_queue6.put(data) 
         
+        # DEBUG
+    def add1b(self, data):
+        """
+        Adds new raw data to internal queue1b (serial data: DEBUG amplitude).
+        :param data: Raw data coming from acquisition process.
+        :type data: float.
+        """
+        self._out_queue1b.put(data)
+
     def stop(self):
         """
         Signals the process to stop parsing data.

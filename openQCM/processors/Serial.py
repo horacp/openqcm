@@ -198,6 +198,8 @@ class SerialProcess(multiprocessing.Process):
         self._Xm = Xm
         self._Xp = Xp
         self._filtered_mag = np.zeros(samples)
+        # DEBUG
+        #self._filtered_mag2 = np.zeros(samples)
         # save current data 
         mag   = self._Xm
         phase = self._Xp ############################
@@ -213,6 +215,8 @@ class SerialProcess(multiprocessing.Process):
         
         # FILTERING - Savitzky-Golay
         filtered_mag = self.savitzky_golay(mag_beseline_corrected, window_size = SG_window_size, order = Constants.SG_order)
+        # DEBUG
+        filtered_mag2 = mag-self._polyfitted
         
         # peak, index e frequency of max detection baseline corrected (filtering optional)
         #self._vector_max_baseline_corrected.append(max(mag_beseline_corrected))   #Z axis (max)
@@ -283,6 +287,10 @@ class SerialProcess(multiprocessing.Process):
         self._parser4.add4([w,diss_mean]) #time()-timestamp - time in seconds
         #self._parser5.add5([time()-timestamp,temperature])
         self._parser5.add5([w,temperature_mean]) #time()-timestamp - time in seconds
+
+        # DEBUG
+        self._parser1b.add1b(filtered_mag2) ##############
+
         '''
         ##############################
         # DATA STORING in CSV/TXT FILE
@@ -338,6 +346,10 @@ class SerialProcess(multiprocessing.Process):
         self._parser4 = parser_process
         self._parser5 = parser_process
         self._parser6 = parser_process
+
+        # DEBUG
+        self._parser1b = parser_process
+
         self._serial = serial.Serial()
         
     ###########################################################################

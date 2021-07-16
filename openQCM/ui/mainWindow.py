@@ -113,7 +113,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt2 = None # frequency
         self._plt3 = None # dissipation
         self._plt4 = None # temperature
-        # self._plt5 = None # DEBUG frequency
+        # DEBUG
+        self._plt1b = None # DEBUG amplitude
+        self._plt5 = None # DEBUG frequency
         self._timer_plot = None
         self._readFREQ = None
         self._QCS_installed = None
@@ -352,7 +354,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt0.enableAutoRange(axis= 'y', enable = True)
         self._plt1.enableAutoRange(axis= 'y', enable = True)
         self._plt0.setLabel('right', 'Phase', units='deg', color=Constants.plot_colors[1], **{'font-size':'10pt'})
-        
+        # DEBUG
+        self._plt1b = pg.ViewBox()  
+        self._plt0.scene().addItem(self._plt1b)
+        self._plt1b.setXLink(self._plt0)
+        # self._plt1b.setYLink(self._plt0)
+        # /DEBUG        
         #--------------------------------------------------------------------------------------------------------------
         # Configures elements of the PyQtGraph plots: resonance
         self._yaxis = AxisItem(orientation='left')  #NonScientificAxis(orientation='left')#
@@ -465,6 +472,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker.consume_queue4()
         self.worker.consume_queue5() 
         self.worker.consume_queue6() 
+
+        # DEBUG
+        self.worker.consume_queue1b()
         
         # MEASUREMENT: dynamic frequency and dissipation labels at run-time
         ###################################################################
@@ -680,15 +690,23 @@ class MainWindow(QtWidgets.QMainWindow):
             def updateViews1():
                 self._plt0.clear()
                 self._plt1.clear()
+                # DEBUG
+                self._plt1b.clear()
                 self._plt1.setGeometry(self._plt0.vb.sceneBoundingRect())
-                self._plt1.linkedViewChanged(self._plt0.vb, self._plt1.XAxis)
+                self._plt1.linkedViewChanged(self._plt0.vb, self._plt1b.XAxis)
+                # DEBUG
+                self._plt1b.setGeometry(self._plt0.vb.sceneBoundingRect())
+                self._plt1b.linkedViewChanged(self._plt0.vb, self._plt1b.XAxis)
             
             # updates for multiple plot y-axes
             updateViews1()
             self._plt0.vb.sigResized.connect(updateViews1) 
             self._plt0.plot(x=self._readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
             self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
-            
+
+            # DEBUG
+            self._plt1b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[8]))
+
             ###################################################################
             # Resonance frequency and dissipation multiple Plot
             def updateViews2():
@@ -736,6 +754,9 @@ class MainWindow(QtWidgets.QMainWindow):
             def updateViews1():
                 self._plt0.clear()
                 self._plt1.clear()
+                # DEBUG
+                self._plt1b.clear()
+                # /DEBUG
                 self._plt1.setGeometry(self._plt0.vb.sceneBoundingRect())
                 self._plt1.linkedViewChanged(self._plt0.vb, self._plt1.XAxis)
             # updates for multiple plot y-axes
@@ -749,6 +770,8 @@ class MainWindow(QtWidgets.QMainWindow):
             elif self._get_source() == SourceType.serial:  
                self._plt0.plot(x=self._readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
                self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
+               # DEBUG
+               self._plt1b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[8]))
             #--------------------------------------------------
             ###
             #img = pg.QtGui.QGraphicsPixmapItem(pg.QtGui.QPixmap('favicon.png'))

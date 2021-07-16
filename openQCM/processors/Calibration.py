@@ -91,7 +91,9 @@ class CalibrationProcess(multiprocessing.Process):
         self._parser5 = parser_process
         self._parser6 = parser_process
         self._serial = serial.Serial()
-        
+        # DEBUG
+        self._parser1b = parser_process
+
     ###########################################################################
     # Opens a specified serial port
     ###########################################################################    
@@ -171,6 +173,8 @@ class CalibrationProcess(multiprocessing.Process):
                 #----------------------------------------------------------
                 temp1=[]
                 temp2=[]
+                # DEBUG
+                temp1b=[]
                 #----------------------------------------------------------
                 while not self._exit.is_set():
                     # Boolean variable to process exceptions
@@ -192,7 +196,7 @@ class CalibrationProcess(multiprocessing.Process):
                         # amplitude/phase convert bit to dB/Deg 
                         vmax = 3.3
                         bitmax = 8192 
-                        ADCtoVolt = vmax / bitmax
+                        ADCtoVolt = vmax / bitmax # 0,000402832; ADCVolt / 2 = 0,000201416
                         VCP = 0.9
                         
                         # WRITES encoded command to the serial port
@@ -245,6 +249,9 @@ class CalibrationProcess(multiprocessing.Process):
                             data_ph=data_ph[1:]
                         temp1=np.append(temp1,data_mag)
                         temp2=np.append(temp2,data_ph)
+                        # DEBUG
+                        temp1b=np.append(temp1b,data_mag + .1)
+                        
                         #print('len=',len(temp1),len(temp2))
                         #------------------------------
                         print(TAG,"signal section #{}/{} acquired successfully\n".format(k+1,Constants.calib_sections), end='\r') #10
@@ -284,6 +291,8 @@ class CalibrationProcess(multiprocessing.Process):
                     ## ADDS new serial data to internal queue
                     self._parser1.add1(temp1)
                     self._parser2.add2(temp2)
+                    # DEBUG
+                    self._parser1b.add1b(temp1b)                   
                     #--------------------------------
                     self._parser6.add6([self._flag,self._flag2,self._flag2,k])
                     k+=1                    
@@ -323,6 +332,9 @@ class CalibrationProcess(multiprocessing.Process):
                    ## ADDS serial data (baseline corrected) to internal queue
                    self._parser1.add1(data_mag_baseline)
                    self._parser2.add2(data_ph_baseline)
+                   # DEBUG
+                   self._parser1b.add1b(data_mag_baseline + .1)
+
                    print(TAG,"Baseline Correction Process Completed")
                    print(TAG,"Peak Detection Process Started")
                    print(TAG, "Finding peaks in acquired signals...")
@@ -355,7 +367,8 @@ class CalibrationProcess(multiprocessing.Process):
                      print(TAG, 'Calibration success for baseline correction!')
                      #print(TAG, 'Please, now click STOP to terminate')
                 # ADDS error flags to internal queue
-                self._parser5.add5([self._flag,self._flag2])    
+                #self._parser5.add5([self._flag,self._flag2])    #tohle je divny
+                self._parser6.add6([self._flag,self._flag2])    
                 #self._parser6.add6([self._flag,self._flag2,self._flag2,len_buffer])
                 #### CLOSES serial port ####
                 self._serial.close()
