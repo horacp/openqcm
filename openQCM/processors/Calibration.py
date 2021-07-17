@@ -250,7 +250,7 @@ class CalibrationProcess(multiprocessing.Process):
                         temp1=np.append(temp1,data_mag)
                         temp2=np.append(temp2,data_ph)
                         # DEBUG
-                        temp1b=np.append(temp1b,data_mag + .1)
+                        temp1b=np.append(temp1b,data_mag)
                         
                         #print('len=',len(temp1),len(temp2))
                         #------------------------------
@@ -292,7 +292,8 @@ class CalibrationProcess(multiprocessing.Process):
                     self._parser1.add1(temp1)
                     self._parser2.add2(temp2)
                     # DEBUG
-                    self._parser1b.add1b(temp1b)                   
+                    self._parser1b.add1b(temp1b)
+                    # print('.\n.')                  
                     #--------------------------------
                     self._parser6.add6([self._flag,self._flag2,self._flag2,k])
                     k+=1                    
@@ -334,6 +335,7 @@ class CalibrationProcess(multiprocessing.Process):
                    self._parser2.add2(data_ph_baseline)
                    # DEBUG
                    self._parser1b.add1b(data_mag_baseline + .1)
+                   print('.\n.')
 
                    print(TAG,"Baseline Correction Process Completed")
                    print(TAG,"Peak Detection Process Started")

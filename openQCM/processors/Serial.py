@@ -20,7 +20,7 @@ TAG = ""#"[Serial]"
 # Processes incoming data and calculates outgoing data by the algorithms
 ###############################################################################
 class SerialProcess(multiprocessing.Process):
-    
+    ff = None
     
     ###########################################################################
     # BASELINE CORRECTION
@@ -216,7 +216,15 @@ class SerialProcess(multiprocessing.Process):
         # FILTERING - Savitzky-Golay
         filtered_mag = self.savitzky_golay(mag_beseline_corrected, window_size = SG_window_size, order = Constants.SG_order)
         # DEBUG
-        filtered_mag2 = mag-self._polyfitted
+        # print('\n0')
+        mag2 = self.aa
+        # print(self.ff)
+        # print(mag2)
+        shift = np.amax(filtered_mag) - np.amax(self.aa)
+        # print('\ndata_mag:',np.amax(data_mag),'self.aa:',np.amax(self.aa),'shift:',shift)
+        fm2 = np.linspace(0,0,self._samples)
+        for idx in range(0,self._samples):
+            fm2[idx] = filtered_mag[idx] - shift   # magnitude        
         
         # peak, index e frequency of max detection baseline corrected (filtering optional)
         #self._vector_max_baseline_corrected.append(max(mag_beseline_corrected))   #Z axis (max)
@@ -248,7 +256,7 @@ class SerialProcess(multiprocessing.Process):
         self._frequency_buffer.append(freq_range[int(index_peak_fit)])
         self._dissipation_buffer.append(1/Qfac_fit)
         self._temperature_buffer.append(temperature)
-        
+
         if self._k>=self._environment:
            #FREQUENCY
            vec_app1 = self.savitzky_golay(self._frequency_buffer.get_all(), window_size = Constants.SG_window_environment, order = Constants.SG_order_environment)
@@ -277,19 +285,30 @@ class SerialProcess(multiprocessing.Process):
         ts_mult=1e6
         w = (int((datetime.datetime.now() - epoch).total_seconds()*ts_mult)) #datetime.datetime.utcnow()
         ##############
+
         ## ADDS new serial data to internal queue
-        self._parser1.add1(filtered_mag) ##############
+        # self._parser1.add1(filtered_mag) ##############
+        self._parser1.add1(fm2) ##############
         self._parser2.add2(phase)        ##############
         # Adds new calculated data (resonance frequency and dissipation) to internal queues
         #self._parser3.add3([time()-timestamp,freq_range[int(index_peak_fit)]])
-        self._parser3.add3([w,freq_range_mean]) #time()-timestamp - time in seconds
-        #self._parser4.add4([time()-timestamp,1/Qfac_fit])
-        self._parser4.add4([w,diss_mean]) #time()-timestamp - time in seconds
-        #self._parser5.add5([time()-timestamp,temperature])
-        self._parser5.add5([w,temperature_mean]) #time()-timestamp - time in seconds
+
+        if self._k>=self._environment:
+            self._parser3.add3([w,freq_range_mean]) #time()-timestamp - time in seconds
+            # DEBUG
+            self._parser3b.add3b([w,self.frq]) #time()-timestamp - time in seconds
+            #self._parser4.add4([time()-timestamp,1/Qfac_fit])
+            self._parser4.add4([w,diss_mean]) #time()-timestamp - time in seconds
+            #self._parser5.add5([time()-timestamp,temperature])
+            self._parser5.add5([w,temperature_mean]) #time()-timestamp - time in seconds
 
         # DEBUG
-        self._parser1b.add1b(filtered_mag2) ##############
+        # print('1')
+        self._parser1b.add1b(mag2) ##############
+        # print('2')
+        self._parser1bf.add1bf(self.ff)
+        # print('\nmag:', mag[0])
+        self._parser1c.add1c(mag)
 
         '''
         ##############################
@@ -348,7 +367,10 @@ class SerialProcess(multiprocessing.Process):
         self._parser6 = parser_process
 
         # DEBUG
+        self._parser3b = parser_process
         self._parser1b = parser_process
+        self._parser1bf = parser_process
+        self._parser1c = parser_process
 
         self._serial = serial.Serial()
         
@@ -483,6 +505,33 @@ class SerialProcess(multiprocessing.Process):
                         data_raw = buffer.split('\n')
                         length = len(data_raw)
                         index_counter += 1
+
+                        #DEBUG - Read debug info from firmware
+                        cmd = 'D64\n'
+                        self._serial.write(cmd.encode())
+                        buffer = ''
+                        while 1:
+                            buffer += self._serial.read(self._serial.inWaiting()).decode(Constants.app_encoding)
+                            if 's' in buffer:
+                                break
+                        Buff = buffer.splitlines()
+                        frl = int(Buff[0])              # calib_freq - DIRTY_RANGE
+                        frr = int(Buff[1])              # calib_freq + DIRTY_RANGE
+                        self.fr = int(Buff[2])               # f - raw maximum in frequency
+                        self.n = int(Buff[3])           # SWEEP_COUNT
+                        self.s = int(Buff[4])           # SWEEP_STEP
+                        self.dis = float(Buff[5])            # Dissipation dis = maxf / (drf - dlf);
+                        self.ff = np.empty(self.n)
+                        self.aa = np.empty(self.n)
+                        for idx in range(0,self.n):
+                            # print(n,idx)
+                            self.ff[idx] = float(Buff[6+(2*idx)]) # frequency
+                            self.aa[idx] = (((float(Buff[7+(2*idx)]) * ADCtoVolt / 2) - VCP) / 0.03)   # magnitude
+                            # print(idx,self.ff[idx],self.aa[idx])
+                        self.a = float(Buff[6 + 2 * self.n])        # coeffs(0)
+                        self.b = float(Buff[7 + 2 * self.n])        # coeffs(1)
+                        self.c = float(Buff[8 + 2 * self.n])        # coeffs(2)
+                        self.frq = float(Buff[9 + 2 * self.n])           # fitted resonance frequency
                         
                         # PERFORMS split with the semicolon delimiter
                         for i in range (length):
@@ -495,6 +544,10 @@ class SerialProcess(multiprocessing.Process):
                             data_ph[i] = float(strs[i][1]) * ADCtoVolt / 1.5
                             data_ph[i] = (data_ph[i]-VCP) / 0.01
                         
+                        # shift = np.amax(data_mag) - np.amax(self.aa)
+                        # # print('\ndata_mag:',np.amax(data_mag),'self.aa:',np.amax(self.aa),'shift:',shift)
+                        # for idx in range(0,self.n):
+                        #     self.aa[idx] = self.aa[idx] = self.aa[idx] + shift   # magnitude
                         # ACQUIRES the temperature value from the buffer 
                         data_temp = float((strs[length - 2][0]))
                             
@@ -525,7 +578,8 @@ class SerialProcess(multiprocessing.Process):
                         #   print(TAG, "WARNING (ValueError): miscalculation")
                     self._parser6.add6([self._err1,self._err2,k,self._flag_error_usb])
                     if k<= self._environment:
-                       bar.update(k)
+                        bar.update(k)
+                        # print('bar\n')
                     elif k/50 == k//50:
                       if k==100:
                          print('\n')
@@ -586,6 +640,7 @@ class SerialProcess(multiprocessing.Process):
     def get_speeds():
         #:return: List of the Overtones :rtype: str list.
         # Loads frequencies from  file (path: 'common\')
+        print('conda: ',Constants.cvs_peakfrequencies_path)
         data  = loadtxt(Constants.cvs_peakfrequencies_path)
         peaks_mag = data[:,0]
         reversed_peaks_mag = peaks_mag[::-1]
@@ -636,7 +691,8 @@ class SerialProcess(multiprocessing.Process):
         spline_points = int((self._stopFreq-self._startFreq))+1
         
         # Sets the frequency range for the corresponding overtone
-        readFREQ = np.arange(samples) * (fStep) + self._startFreq 
+        readFREQ = np.arange(samples) * (fStep) + self._startFreq
+
         return overtone_name, overtone_value, fStep, readFREQ,SG_window_size, spline_points, spline_factor
     
     

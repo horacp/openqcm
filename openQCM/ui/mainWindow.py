@@ -114,8 +114,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt3 = None # dissipation
         self._plt4 = None # temperature
         # DEBUG
-        self._plt1b = None # DEBUG amplitude
-        self._plt5 = None # DEBUG frequency
+        self._plt0b = None # DEBUG amplitude
+        self._plt0c = None # DEBUG amplitude
+        self._plt2b = None # DEBUG frequency
+        # /DEBUG
         self._timer_plot = None
         self._readFREQ = None
         self._QCS_installed = None
@@ -351,15 +353,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt0.scene().addItem(self._plt1)
         self._plt0.getAxis('right').linkToView(self._plt1)
         self._plt1.setXLink(self._plt0)
+
+        # DEBUG
+        self._plt0b = pg.ViewBox()  
+        self._plt0.scene().addItem(self._plt0b)
+        self._plt0c = pg.ViewBox()  
+        self._plt0.scene().addItem(self._plt0c)
+        # self._plt0b.setXLink(self._plt0)
+        # self._plt0b.setYLink(self._plt0)
+        # /DEBUG        
         self._plt0.enableAutoRange(axis= 'y', enable = True)
         self._plt1.enableAutoRange(axis= 'y', enable = True)
-        self._plt0.setLabel('right', 'Phase', units='deg', color=Constants.plot_colors[1], **{'font-size':'10pt'})
         # DEBUG
-        self._plt1b = pg.ViewBox()  
-        self._plt0.scene().addItem(self._plt1b)
-        self._plt1b.setXLink(self._plt0)
-        # self._plt1b.setYLink(self._plt0)
-        # /DEBUG        
+        # self._plt0b.enableAutoRange(axis= 'y', enable = True)
+        self._plt0.setLabel('right', 'Phase', units='deg', color=Constants.plot_colors[1], **{'font-size':'10pt'})
         #--------------------------------------------------------------------------------------------------------------
         # Configures elements of the PyQtGraph plots: resonance
         self._yaxis = AxisItem(orientation='left')  #NonScientificAxis(orientation='left')#
@@ -389,10 +396,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt3.setLabel('bottom', 'Time (hh:mm:ss)',units='')
         self._plt3.setLabel('left', 'Dissipation', units='')
         '''
-        # self._plt5 = pg.ViewBox()  
-        # self._plt2.scene().addItem(self._plt5)
-        # self._plt5.setXLink(self._plt2)
-        # self._plt5.setYLink(self._plt2)
+        self._plt2b = pg.ViewBox()  
+        self._plt2.scene().addItem(self._plt2b)
+        self._plt2b.enableAutoRange(axis= 'y', enable = True) 
+        self._plt2b.setXLink(self._plt2)
+        # self._plt2b.setYLink(self._plt2)
 
         #---------------------------------------------------------------------------------------------------------------
         # Configures text comment and info
@@ -474,7 +482,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker.consume_queue6() 
 
         # DEBUG
-        self.worker.consume_queue1b()
+        self.worker.consume_queue0b()
+        self.worker.consume_queue0bf()
+        self.worker.consume_queue0c()
+        self.worker.consume_queue3b()
         
         # MEASUREMENT: dynamic frequency and dissipation labels at run-time
         ###################################################################
@@ -691,12 +702,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._plt0.clear()
                 self._plt1.clear()
                 # DEBUG
-                self._plt1b.clear()
+                self._plt0b.clear()
                 self._plt1.setGeometry(self._plt0.vb.sceneBoundingRect())
-                self._plt1.linkedViewChanged(self._plt0.vb, self._plt1b.XAxis)
+                self._plt1.linkedViewChanged(self._plt0.vb, self._plt0b.XAxis)
                 # DEBUG
-                self._plt1b.setGeometry(self._plt0.vb.sceneBoundingRect())
-                self._plt1b.linkedViewChanged(self._plt0.vb, self._plt1b.XAxis)
+                self._plt0b.setGeometry(self._plt0.vb.sceneBoundingRect())
+                self._plt0b.linkedViewChanged(self._plt0.vb, self._plt0b.XAxis)
             
             # updates for multiple plot y-axes
             updateViews1()
@@ -705,14 +716,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
 
             # DEBUG
-            self._plt1b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[8]))
+            self._plt0b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value0b_buffer(),pen=Constants.plot_colors[10]))
 
             ###################################################################
             # Resonance frequency and dissipation multiple Plot
             def updateViews2():
                 self._plt2.clear()
                 self._plt3.clear()
-                # self._plt5.clear()
+                # self._plt2b.clear()
                 self._plt3.setGeometry(self._plt2.vb.sceneBoundingRect())
                 self._plt3.linkedViewChanged(self._plt2.vb, self._plt3.XAxis)
             
@@ -733,7 +744,7 @@ class MainWindow(QtWidgets.QMainWindow):
                self._plt4.setLimits(yMax=50,yMin=-10)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_2,pen=Constants.plot_colors[7]))
             # self._vector_3 = np.array(self.worker.get_d4_buffer())-self._reference_value_dissipation 
-            # self._plt5.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_3,pen=Constants.plot_colors[4]))
+            # self._plt2b.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_3,pen=Constants.plot_colors[4]))
             
             ###################################################################
             # Temperature plot
@@ -755,23 +766,42 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._plt0.clear()
                 self._plt1.clear()
                 # DEBUG
-                self._plt1b.clear()
+                self._plt0b.clear()
+                self._plt0c.clear()
                 # /DEBUG
                 self._plt1.setGeometry(self._plt0.vb.sceneBoundingRect())
                 self._plt1.linkedViewChanged(self._plt0.vb, self._plt1.XAxis)
+                # DEBUG
+                self._plt0b.setGeometry(self._plt0.vb.sceneBoundingRect())
+                self._plt0b.linkedViewChanged(self._plt0.vb, self._plt0b.XAxis)
+                self._plt0b.linkedViewChanged(self._plt0.vb, self._plt0b.YAxis)
+                self._plt0c.setGeometry(self._plt0.vb.sceneBoundingRect())
+                self._plt0c.linkedViewChanged(self._plt0.vb, self._plt0c.XAxis)
+                self._plt0c.linkedViewChanged(self._plt0.vb, self._plt0c.YAxis)
             # updates for multiple plot y-axes
             updateViews1()
             self._plt0.vb.sigResized.connect(updateViews1)
             #-----------------------------------
             if self._get_source() == SourceType.calibration: 
-               calibration_readFREQ  = np.arange(len(self.worker.get_value1_buffer())) * (Constants.calib_fStep) + Constants.calibration_frequency_start   
-               self._plt0.plot(x=calibration_readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
-               self._plt1.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
-            elif self._get_source() == SourceType.serial:  
-               self._plt0.plot(x=self._readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
-               self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
-               # DEBUG
-               self._plt1b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[8]))
+                calibration_readFREQ  = np.arange(len(self.worker.get_value1_buffer())) * (Constants.calib_fStep) + Constants.calibration_frequency_start   
+                self._plt0.plot(x=calibration_readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
+                self._plt1.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
+                # DEBUG
+                self._plt1.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value0b_buffer(),pen=Constants.plot_colors[9]))
+            elif self._get_source() == SourceType.serial:
+                yy=self.worker.get_value1_buffer()
+                self._plt0.plot(x=self._readFREQ,y=yy,pen=Constants.plot_colors[0])
+                self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
+                # DEBUG
+                xx2=self.worker.get_value0bf_buffer()
+                yy2=self.worker.get_value0b_buffer()
+                self._plt0b.addItem(pg.PlotCurveItem(x=xx2,y=yy2,pen=Constants.plot_colors[8]))
+                yy1=self.worker.get_value0c_buffer()
+                # print('YY1:',yy1)
+                if yy1 is not None:
+                    self._plt0c.addItem(pg.PlotCurveItem(x=self._readFREQ,y=yy1,pen=Constants.plot_colors[9]))
+                
+                # print('MAGN:',yy,'MAGN2:',yy2)
             #--------------------------------------------------
             ###
             #img = pg.QtGui.QGraphicsPixmapItem(pg.QtGui.QPixmap('favicon.png'))
@@ -783,10 +813,12 @@ class MainWindow(QtWidgets.QMainWindow):
             def updateViews2():
                 self._plt2.clear()
                 self._plt3.clear()
-                # self._plt5.clear()
+                self._plt2b.clear()
                 self._plt3.setGeometry(self._plt2.vb.sceneBoundingRect())
                 self._plt3.linkedViewChanged(self._plt2.vb, self._plt3.XAxis)
-            # updates for multiple plot y-axes
+                self._plt2b.setGeometry(self._plt2.vb.sceneBoundingRect())
+                self._plt2b.linkedViewChanged(self._plt2.vb, self._plt2b.XAxis)
+                self._plt2b.linkedViewChanged(self._plt2.vb, self._plt2b.YAxis)            # updates for multiple plot y-axes
             updateViews2()
             #text = pg.TextItem(html='<div style="text-align: center"><span style="color: #ff0000;"> %s</span></div>' % "prova",anchor=(0.0, 0.0)) 
             #text.setPos(0.0, 0.0) #text########
@@ -803,7 +835,7 @@ class MainWindow(QtWidgets.QMainWindow):
                self._plt3.setLimits(yMax=(self._readFREQ[-1]-self._readFREQ[0])/self._readFREQ[0],yMin=0, minYRange=1e-6)
                self._plt4.setLimits(yMax=50,yMin=-10, minYRange=0.5)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self.worker.get_d2_buffer(),pen=Constants.plot_colors[3]))
-            # self._plt5.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self.worker.get_d4_buffer(),pen=Constants.plot_colors[4]))
+            self._plt2b.addItem(pg.PlotCurveItem(self.worker.get_t1b_buffer(),self.worker.get_d1b_buffer(),pen=Constants.plot_colors[8]))
             
             ##############################
             # Add  lines with labels
@@ -839,6 +871,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self._get_source() == SourceType.calibration:
            print(TAG, "Scanning the source: {}".format(Constants.app_sources[1]))  # self._get_source().name
            Log.i(TAG, "Scanning the source: {}".format(Constants.app_sources[1]))
+        elif self._get_source() == SourceType.sinus:
+           print(TAG, "Scanning the source: {}".format(Constants.app_sources[2]))  # self._get_source().name
+           Log.i(TAG, "Scanning the source: {}".format(Constants.app_sources[2]))
         
         # Clears boxes before adding new
         self.ControlsWin.ui1.cBox_Port.clear()

@@ -13,8 +13,9 @@ from openQCM.common.architecture import Architecture,OSType
 class SourceType(Enum):
     serial = 0
     calibration = 1
-    SocketClient = 2
-    
+    sinus = 2
+    SocketClient = 3
+   
 
 ###############################################################################
 # Specifies the minimal Python version required
@@ -35,7 +36,7 @@ class Constants:
     ##########################
     app_title = "Real-Time openQCM GUI FZU"
     app_version = '2.1'
-    app_sources = ["Measurement openQCM Q-1 Device", "Calibration openQCM Q-1 Device"]#, "Socket Client"]
+    app_sources = ["Measurement openQCM Q-1 Device", "Calibration openQCM Q-1 Device", "10 MHz sinus"]#, "Socket Client"]
     app_encoding = "utf-8"
     
     
@@ -43,7 +44,7 @@ class Constants:
     # PLOT parameters #
     ###################
     plot_update_ms = 200#16
-    plot_colors = ['#ff0000', '#0072bd', '#00ffff', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f','#ffff00'] 
+    plot_colors = ['#ff0000', '#0072bd', '#00ffff', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f','#ffff00','#00ff00','#ff00ff'] 
     plot_max_lines = len(plot_colors)
     
     
