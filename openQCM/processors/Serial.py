@@ -309,6 +309,8 @@ class SerialProcess(multiprocessing.Process):
         self._parser1bf.add1bf(self.ff)
         # print('\nmag:', mag[0])
         self._parser1c.add1c(mag)
+        # print('\nCOEF:',self.coef)
+        self._parser7.add7(self.coef)
 
         '''
         ##############################
@@ -371,6 +373,7 @@ class SerialProcess(multiprocessing.Process):
         self._parser1b = parser_process
         self._parser1bf = parser_process
         self._parser1c = parser_process
+        self._parser7 = parser_process
 
         self._serial = serial.Serial()
         
@@ -515,12 +518,13 @@ class SerialProcess(multiprocessing.Process):
                             if 's' in buffer:
                                 break
                         Buff = buffer.splitlines()
+                        self.coef = np.empty(6)
                         frl = int(Buff[0])              # calib_freq - DIRTY_RANGE
                         frr = int(Buff[1])              # calib_freq + DIRTY_RANGE
-                        self.fr = int(Buff[2])               # f - raw maximum in frequency
+                        self.fr = int(Buff[2])          # f - raw maximum in frequency
                         self.n = int(Buff[3])           # SWEEP_COUNT
-                        self.s = int(Buff[4])           # SWEEP_STEP
-                        self.dis = float(Buff[5])            # Dissipation dis = maxf / (drf - dlf);
+                        self.coef[0] = float(Buff[4])   # SWEEP_STEP
+                        self.dis = float(Buff[5])       # Dissipation dis = maxf / (drf - dlf);
                         self.ff = np.empty(self.n)
                         self.aa = np.empty(self.n)
                         for idx in range(0,self.n):
@@ -528,10 +532,12 @@ class SerialProcess(multiprocessing.Process):
                             self.ff[idx] = float(Buff[6+(2*idx)]) # frequency
                             self.aa[idx] = (((float(Buff[7+(2*idx)]) * ADCtoVolt / 2) - VCP) / 0.03)   # magnitude
                             # print(idx,self.ff[idx],self.aa[idx])
-                        self.a = float(Buff[6 + 2 * self.n])        # coeffs(0)
-                        self.b = float(Buff[7 + 2 * self.n])        # coeffs(1)
-                        self.c = float(Buff[8 + 2 * self.n])        # coeffs(2)
-                        self.frq = float(Buff[9 + 2 * self.n])           # fitted resonance frequency
+                        self.coef[1] = float(Buff[6 + 2 * self.n])        # coeffs(0)
+                        self.coef[2] = float(Buff[7 + 2 * self.n])        # coeffs(1)
+                        self.coef[3] = float(Buff[8 + 2 * self.n])        # coeffs(2)
+                        self.frq = float(Buff[9 + 2 * self.n])            # fitted resonance frequency
+                        self.coef[4] = float(Buff[10 + 2 * self.n])       # Wait before analog read [µsec]
+                        self.coef[5] = float(Buff[11 + 2 * self.n])       # Average samples for analog read
                         
                         # PERFORMS split with the semicolon delimiter
                         for i in range (length):

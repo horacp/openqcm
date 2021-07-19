@@ -12,7 +12,9 @@ from openQCM.core.constants import Constants, SourceType, DateAxis, NonScientifi
 from openQCM.ui.popUp import PopUp
 from openQCM.common.logger import Logger as Log
 import numpy as np
-import sys
+import pygame
+from pygame.locals import *
+#import sys
 
 TAG = ""#"[MainWindow]"
 
@@ -112,10 +114,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt1 = None # phase
         self._plt2 = None # frequency
         self._plt3 = None # dissipation
+        self.temp = False
         self._plt4 = None # temperature
         # DEBUG
         self._plt0b = None # DEBUG amplitude
         self._plt0c = None # DEBUG amplitude
+        self._plt0d = None # DEBUG amplitude - polynom fit
         self._plt2b = None # DEBUG frequency
         # /DEBUG
         self._timer_plot = None
@@ -359,6 +363,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plt0.scene().addItem(self._plt0b)
         self._plt0c = pg.ViewBox()  
         self._plt0.scene().addItem(self._plt0c)
+        self._plt0d = pg.ViewBox()  
+        self._plt0.scene().addItem(self._plt0d)
         # self._plt0b.setXLink(self._plt0)
         # self._plt0b.setYLink(self._plt0)
         # /DEBUG        
@@ -428,10 +434,11 @@ class MainWindow(QtWidgets.QMainWindow):
         #######################
         #-----------------------------------------------------------------------------------------------------------------
         # Configures elements of the PyQtGraph plots: temperature
-        self._plt4 = self.PlotsWin.ui2.plt.addPlot(row=0, col=3, title= title3, axisItems={'bottom': DateAxis(orientation='bottom')})
-        self._plt4.showGrid(x=True, y=True) 
-        self._plt4.setLabel('bottom', 'Time',units='s')
-        self._plt4.setLabel('left', 'Temperature', units='°C', color=Constants.plot_colors[4], **{'font-size':'10pt'})
+        if self.temp:
+            self._plt4 = self.PlotsWin.ui2.plt.addPlot(row=0, col=3, title= title3, axisItems={'bottom': DateAxis(orientation='bottom')})
+            self._plt4.showGrid(x=True, y=True) 
+            self._plt4.setLabel('bottom', 'Time',units='s')
+            self._plt4.setLabel('left', 'Temperature', units='°C', color=Constants.plot_colors[4], **{'font-size':'10pt'})
       
         
     ###########################################################################
@@ -482,10 +489,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker.consume_queue6() 
 
         # DEBUG
-        self.worker.consume_queue0b()
-        self.worker.consume_queue0bf()
-        self.worker.consume_queue0c()
+        self.worker.consume_queue1b()
+        self.worker.consume_queue1bf()
+        self.worker.consume_queue1c()
         self.worker.consume_queue3b()
+        self.worker.consume_queue7() 
         
         # MEASUREMENT: dynamic frequency and dissipation labels at run-time
         ###################################################################
@@ -497,21 +505,21 @@ class MainWindow(QtWidgets.QMainWindow):
             #print(self._ser_err_usb, end='\r')
             #if self._ser_err_usb <=1:
             if vector1.any:
-               # progressbar
-               if self._ser_control<=Constants.environment:
-                  self._completed = self._ser_control*2
+                # progressbar
+                if self._ser_control<=Constants.environment:
+                    self._completed = self._ser_control*2
 
-               if str(vector1[0])=='nan' and not self._ser_error1 and not self._ser_error2:
-                  label1 = 'processing...'
-                  label2 = 'processing...'
-                  label3 = 'processing...' 
-                  labelstatus = 'Processing'
-                  self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ffff00; padding: 1px; border: 1px solid #cccccc') #ff8000
-                  color_err = '#000000'   
-                  labelbar = 'Please wait, processing early data...'
+                if str(vector1[0])=='nan' and not self._ser_error1 and not self._ser_error2:
+                    label1 = 'processing...'
+                    label2 = 'processing...'
+                    label3 = 'processing...' 
+                    labelstatus = 'Processing'
+                    self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ffff00; padding: 1px; border: 1px solid #cccccc') #ff8000
+                    color_err = '#000000'   
+                    labelbar = 'Please wait, processing early data...'
 
-               elif (str(vector1[0])=='nan' and (self._ser_error1 or self._ser_error2)):
-                      if self._ser_error1 and self._ser_error2:
+                elif (str(vector1[0])=='nan' and (self._ser_error1 or self._ser_error2)):
+                    if self._ser_error1 and self._ser_error2:
                         label1= ""
                         label2= ""
                         label3= ""
@@ -519,7 +527,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         color_err = '#ff0000'
                         labelbar = 'Warning: unable to apply half-power bandwidth method, lower and upper cut-off frequency not found'
                         self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
-                      elif self._ser_error1:
+                    elif self._ser_error1:
                         label1= ""
                         label2= ""
                         label3= ""
@@ -527,7 +535,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         color_err = '#ff0000'
                         labelbar = 'Warning: unable to apply half-power bandwidth method, lower cut-off frequency (left side) not found'
                         self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
-                      elif self._ser_error2:
+                    elif self._ser_error2:
                         label1= ""
                         label2= ""
                         label3= ""
@@ -535,60 +543,63 @@ class MainWindow(QtWidgets.QMainWindow):
                         color_err = '#ff0000'
                         labelbar = 'Warning: unable to apply half-power bandwidth method, upper cut-off frequency (right side) not found'
                         self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
-               else:
-                  if not self._ser_error1 and not self._ser_error2:
-                      if not self._reference_flag:
-                          d1=float("{0:.2f}".format(vector1[0]))
-                          d2=float("{0:.4f}".format(vector2[0]*1e6))
-                          d3=float("{0:.2f}".format(vectortemp[0]))
-                      else:
-                          a1= vector1[0]-self._reference_value_frequency
-                          a2= vector2[0]-self._reference_value_dissipation
-                          d1=float("{0:.2f}".format(a1))
-                          d2=float("{0:.4f}".format(a2*1e6))
-                          d3=float("{0:.2f}".format(vectortemp[0])) 
-                      label1= str(d1)+ " Hz"
-                      label2= str(d2)+ "e-06"
-                      label3= str(d3)+ " °C" 
-                      labelstatus = 'Monitoring'
-                      color_err = '#000000'
-                      labelbar = 'Monitoring!'
-                      self.ControlsWin.ui1.infostatus.setStyleSheet('background: #00ff72; padding: 1px; border: 1px solid #cccccc')
-                  else:
-                      if self._ser_error1 and self._ser_error2:
-                        label1= "-"
-                        label2= "-"
-                        label3= "-"
-                        labelstatus = 'Warning'
-                        color_err = '#ff0000'
-                        labelbar = 'Warning: unable to apply half-power bandwidth method, lower and upper cut-off frequency not found'
-                        self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
-                      elif self._ser_error1:
-                        label1= "-"
-                        label2= "-"
-                        label3= "-"
-                        labelstatus = 'Warning'
-                        color_err = '#ff0000'
-                        labelbar = 'Warning: unable to apply half-power bandwidth method, lower cut-off frequency (left side) not found'
-                        self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
-                      elif self._ser_error2:
-                        label1= "-"
-                        label2= "-"
-                        label3= "-"
-                        labelstatus = 'Warning'
-                        color_err = '#ff0000'
-                        labelbar = 'Warning: unable to apply half-power bandwidth method, upper cut-off frequency (right side) not found'
-                        self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
+                else:
+                    if not self._ser_error1 and not self._ser_error2:
+                        if not self._reference_flag:
+                            d1=float("{0:.2f}".format(vector1[0]))
+                            d2=float("{0:.4f}".format(vector2[0]*1e6))
+                            d3=float("{0:.2f}".format(vectortemp[0]))
+                        else:
+                            a1= vector1[0]-self._reference_value_frequency
+                            a2= vector2[0]-self._reference_value_dissipation
+                            d1=float("{0:.2f}".format(a1))
+                            d2=float("{0:.4f}".format(a2*1e6))
+                            d3=float("{0:.2f}".format(vectortemp[0])) 
+                        label1= str(d1)+ " Hz"
+                        label2= str(d2)+ "e-06"
+                        label3= str(d3)+ " °C" 
+                        labelstatus = 'Monitoring'
+                        color_err = '#000000'
+                        labelbar = 'Monitoring!'
+                        self.ControlsWin.ui1.infostatus.setStyleSheet('background: #00ff72; padding: 1px; border: 1px solid #cccccc')
+                    else:
+                        if self._ser_error1 and self._ser_error2:
+                            label1= "-"
+                            label2= "-"
+                            label3= "-"
+                            labelstatus = 'Warning'
+                            color_err = '#ff0000'
+                            labelbar = 'Warning: unable to apply half-power bandwidth method, lower and upper cut-off frequency not found'
+                            self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
+                        elif self._ser_error1:
+                            label1= "-"
+                            label2= "-"
+                            label3= "-"
+                            labelstatus = 'Warning'
+                            color_err = '#ff0000'
+                            labelbar = 'Warning: unable to apply half-power bandwidth method, lower cut-off frequency (left side) not found'
+                            self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
+                        elif self._ser_error2:
+                            label1= "-"
+                            label2= "-"
+                            label3= "-"
+                            labelstatus = 'Warning'
+                            color_err = '#ff0000'
+                            labelbar = 'Warning: unable to apply half-power bandwidth method, upper cut-off frequency (right side) not found'
+                            self.ControlsWin.ui1.infostatus.setStyleSheet('background: #ff0000; padding: 1px; border: 1px solid #cccccc')
                          
-               self.InfoWin.ui3.l6a.setText("<font color=#0000ff > Temperature </font>" + label3) 
-               self.InfoWin.ui3.l6.setText("<font color=#0000ff > Dissipation </font>" + label2)
-               self.InfoWin.ui3.l7.setText("<font color=#0000ff > Resonance Frequency </font>" + label1)
-               self.ControlsWin.ui1.infostatus.setText("<font color=#000000 > Program Status </font>" + labelstatus)
-               self.ControlsWin.ui1.infobar.setText("<font color=#0000ff> Infobar </font><font color={}>{}</font>".format(color_err,labelbar))
-               # progressbar 
-               self.ControlsWin.ui1.progressBar.setValue(self._completed+2)
+                self.InfoWin.ui3.l6a.setText("<font color=#0000ff > Temperature </font>" + label3) 
+                self.InfoWin.ui3.l6.setText("<font color=#0000ff > Dissipation </font>" + label2)
+                self.InfoWin.ui3.l7.setText("<font color=#0000ff > Resonance Frequency </font>" + label1)
+
+                # self.InfoWin.ui3.lfww.setText("<font color=#0000ff > Wait before analog read [µsec] </font>" + label3) 
+
+                self.ControlsWin.ui1.infostatus.setText("<font color=#000000 > Program Status </font>" + labelstatus)
+                self.ControlsWin.ui1.infobar.setText("<font color=#0000ff> Infobar </font><font color={}>{}</font>".format(color_err,labelbar))
+                # progressbar 
+                self.ControlsWin.ui1.progressBar.setValue(self._completed+2)
             
-            #elif self._ser_err_usb >1:
+            # elif self._ser_err_usb >1:
                 # PopUp.warning(self, Constants.app_title, "Warning: USB cable device disconnected!")  
                 # self.stop() 
         
@@ -716,7 +727,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
 
             # DEBUG
-            self._plt0b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value0b_buffer(),pen=Constants.plot_colors[10]))
+            self._plt0b.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[10]))
 
             ###################################################################
             # Resonance frequency and dissipation multiple Plot
@@ -735,21 +746,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self._vector_2 = np.array(self.worker.get_d2_buffer())-self._reference_value_dissipation 
             #Prevent the user from zooming/panning out of this specified region
             if self._get_source() == SourceType.serial:
-               #dy = [(value, str(value)) for value in (range(int(min(self._readFREQ)), int(max(self._readFREQ)+1)))]
-               #self._yaxis.setTicks([dy])
-               #tickBottom = {self._readFREQ[250]:self._readFREQ[0],self._readFREQ[-1]:self._readFREQ[250]}
-               #self._yaxis.setTicks([tickBottom.items()])
-               self._plt2.setLimits(yMax=self._vector_reference_frequency[-1],yMin=self._vector_reference_frequency[0], minYRange=5)
-               self._plt3.setLimits(yMax=self._vector_reference_dissipation[-1],yMin=self._vector_reference_dissipation[0], minYRange=1e-7) 
-               self._plt4.setLimits(yMax=50,yMin=-10)
+                #dy = [(value, str(value)) for value in (range(int(min(self._readFREQ)), int(max(self._readFREQ)+1)))]
+                #self._yaxis.setTicks([dy])
+                #tickBottom = {self._readFREQ[250]:self._readFREQ[0],self._readFREQ[-1]:self._readFREQ[250]}
+                #self._yaxis.setTicks([tickBottom.items()])
+                self._plt2.setLimits(yMax=self._vector_reference_frequency[-1],yMin=self._vector_reference_frequency[0], minYRange=5)
+                self._plt3.setLimits(yMax=self._vector_reference_dissipation[-1],yMin=self._vector_reference_dissipation[0], minYRange=1e-7)
+                if self.temp:
+                    self._plt4.setLimits(yMax=50,yMin=-10)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_2,pen=Constants.plot_colors[7]))
             # self._vector_3 = np.array(self.worker.get_d4_buffer())-self._reference_value_dissipation 
             # self._plt2b.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self._vector_3,pen=Constants.plot_colors[4]))
             
             ###################################################################
             # Temperature plot
-            self._plt4.clear() 
-            self._plt4.plot(x= self.worker.get_t3_buffer(),y=self.worker.get_d3_buffer(),pen=Constants.plot_colors[4])
+            if self.temp:
+                self._plt4.clear() 
+                self._plt4.plot(x= self.worker.get_t3_buffer(),y=self.worker.get_d3_buffer(),pen=Constants.plot_colors[4])
             
         ###########################################################################################################################
         # REFERENCE NOT SET 
@@ -768,6 +781,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # DEBUG
                 self._plt0b.clear()
                 self._plt0c.clear()
+                self._plt0d.clear()
                 # /DEBUG
                 self._plt1.setGeometry(self._plt0.vb.sceneBoundingRect())
                 self._plt1.linkedViewChanged(self._plt0.vb, self._plt1.XAxis)
@@ -778,6 +792,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._plt0c.setGeometry(self._plt0.vb.sceneBoundingRect())
                 self._plt0c.linkedViewChanged(self._plt0.vb, self._plt0c.XAxis)
                 self._plt0c.linkedViewChanged(self._plt0.vb, self._plt0c.YAxis)
+                self._plt0d.setGeometry(self._plt0.vb.sceneBoundingRect())
+                self._plt0d.linkedViewChanged(self._plt0.vb, self._plt0d.XAxis)
+                self._plt0d.linkedViewChanged(self._plt0.vb, self._plt0d.YAxis)
             # updates for multiple plot y-axes
             updateViews1()
             self._plt0.vb.sigResized.connect(updateViews1)
@@ -787,21 +804,43 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._plt0.plot(x=calibration_readFREQ,y=self.worker.get_value1_buffer(),pen=Constants.plot_colors[0])
                 self._plt1.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
                 # DEBUG
-                self._plt1.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value0b_buffer(),pen=Constants.plot_colors[9]))
+                self._plt0b.addItem(pg.PlotCurveItem(x=calibration_readFREQ,y=self.worker.get_value1b_buffer(),pen=Constants.plot_colors[9]))
             elif self._get_source() == SourceType.serial:
                 yy=self.worker.get_value1_buffer()
                 self._plt0.plot(x=self._readFREQ,y=yy,pen=Constants.plot_colors[0])
                 self._plt1.addItem(pg.PlotCurveItem(x=self._readFREQ,y=self.worker.get_value2_buffer(),pen=Constants.plot_colors[1]))
                 # DEBUG
-                xx2=self.worker.get_value0bf_buffer()
-                yy2=self.worker.get_value0b_buffer()
-                self._plt0b.addItem(pg.PlotCurveItem(x=xx2,y=yy2,pen=Constants.plot_colors[8]))
-                yy1=self.worker.get_value0c_buffer()
+                fitfreq=self.worker.get_value1bf_buffer()
+                yy2=self.worker.get_value1b_buffer()
+                self._plt0b.addItem(pg.PlotCurveItem(x=fitfreq,y=yy2,pen=Constants.plot_colors[8]))
+                yy1=self.worker.get_value1c_buffer()
                 # print('YY1:',yy1)
-                if yy1 is not None:
-                    self._plt0c.addItem(pg.PlotCurveItem(x=self._readFREQ,y=yy1,pen=Constants.plot_colors[9]))
-                
                 # print('MAGN:',yy,'MAGN2:',yy2)
+                if yy1 is not None:
+                    self._plt0c.addItem(pg.PlotCurveItem(x=self._readFREQ,y=yy1,pen=Constants.plot_colors[10]))
+                coef=self.worker.get_value7_buffer()
+                if coef is not None:
+                    # print('\ncoeffs:',coef,' C1:',coef[1])
+                    self.InfoWin.ui3.lfww.setText("<font color=#0000ff > Wait before analog read [µsec] </font>" + str(int(coef[4]))) 
+                    self.InfoWin.ui3.lfws.setText("<font color=#0000ff > Average samples for analog read </font>" + str(int(coef[5])))
+                    fleft = int(self._readFREQ[0])
+                    fright = int(self._readFREQ[-1])
+                    idx = 0
+                    polyf = np.empty(fright-fleft)
+                    polya = np.empty(fright-fleft)
+                    for fff in range(fleft,fright):
+                        iii = (float(fff) - fitfreq[0]) / coef[0]
+                        aaa = coef[1]* iii * iii + coef[2] * iii + coef[3]
+                        # if iii == 600:
+                        #     print(idx,iii,fff,aaa)
+                        polya[idx] = aaa
+                        polyf[idx] = fff
+                        # if idx % 32 == 0:
+                        #     print(idx,iii,fff,aaa)
+                        idx += 1
+                    # self.GraphA.plot(self.polyf,self.polya, pen=pg.mkPen(color='#808000', width=2))
+                    self._plt0d.addItem(pg.PlotCurveItem(x=polyf,y=polya - np.amax(polya) + np.amax(yy),pen=Constants.plot_colors[9]))
+                
             #--------------------------------------------------
             ###
             #img = pg.QtGui.QGraphicsPixmapItem(pg.QtGui.QPixmap('favicon.png'))
@@ -827,13 +866,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self._plt2.plot(x= self.worker.get_t1_buffer(),y=self.worker.get_d1_buffer(),pen=Constants.plot_colors[2])
             #Prevent the user from zooming/panning out of this specified region
             if self._get_source() == SourceType.serial:
-               #dy = [(value, str(value)) for value in (range(int(min(self._readFREQ)), int(max(self._readFREQ)+1)))]
-               #self._yaxis.setTicks([dy])
-               #tickBottom = {self._readFREQ[250]:self._readFREQ[0],self._readFREQ[-1]:self._readFREQ[250]}
-               #self._yaxis.setTicks([tickBottom.items()])
-               self._plt2.setLimits(yMax=self._readFREQ[-1],yMin=self._readFREQ[0], minYRange=10, maxYRange=10000) 
-               self._plt3.setLimits(yMax=(self._readFREQ[-1]-self._readFREQ[0])/self._readFREQ[0],yMin=0, minYRange=1e-6)
-               self._plt4.setLimits(yMax=50,yMin=-10, minYRange=0.5)
+                #dy = [(value, str(value)) for value in (range(int(min(self._readFREQ)), int(max(self._readFREQ)+1)))]
+                #self._yaxis.setTicks([dy])
+                #tickBottom = {self._readFREQ[250]:self._readFREQ[0],self._readFREQ[-1]:self._readFREQ[250]}
+                #self._yaxis.setTicks([tickBottom.items()])
+                self._plt2.setLimits(yMax=self._readFREQ[-1],yMin=self._readFREQ[0], minYRange=10, maxYRange=10000) 
+                self._plt3.setLimits(yMax=(self._readFREQ[-1]-self._readFREQ[0])/self._readFREQ[0],yMin=0, minYRange=1e-6)
+                if self.temp:
+                    self._plt4.setLimits(yMax=50,yMin=-10, minYRange=0.5)
             self._plt3.addItem(pg.PlotCurveItem(self.worker.get_t2_buffer(),self.worker.get_d2_buffer(),pen=Constants.plot_colors[3]))
             self._plt2b.addItem(pg.PlotCurveItem(self.worker.get_t1b_buffer(),self.worker.get_d1b_buffer(),pen=Constants.plot_colors[8]))
             
@@ -853,8 +893,9 @@ class MainWindow(QtWidgets.QMainWindow):
             '''
             ###################################################################
             # Temperature plot
-            self._plt4.clear() 
-            self._plt4.plot(x= self.worker.get_t3_buffer(),y=self.worker.get_d3_buffer(),pen=Constants.plot_colors[4])     
+            if self.temp:
+                self._plt4.clear() 
+                self._plt4.plot(x= self.worker.get_t3_buffer(),y=self.worker.get_d3_buffer(),pen=Constants.plot_colors[4])     
           
     ###########################################################################################################################################    
         
@@ -917,7 +958,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._update_sample_size()
                 self._plt2.clear()
                 self._plt3.clear()
-                self._plt4.clear()
+                if self.temp:
+                    self._plt4.clear()
                 # self._plt5.clear()
         
         

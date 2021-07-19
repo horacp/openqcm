@@ -19,10 +19,11 @@ class ParserProcess(multiprocessing.Process):
                        data_queue4,
                        data_queue5,
                        data_queue6,
-                       data_queue0b,
-                       data_queue0bf,
-                       data_queue0c,
-                       data_queue3b):
+                       data_queue1b,
+                       data_queue1bf,
+                       data_queue1c,
+                       data_queue3b,
+                       data_queue7):
         """
         :param data_queue{i}: References to queue where processed data will be put.
         :type data_queue{i}: multiprocessing Queue.
@@ -38,10 +39,11 @@ class ParserProcess(multiprocessing.Process):
         self._out_queue6 = data_queue6
 
         # DEBUG
-        self._out_queue0b = data_queue0b
-        self._out_queue0bf = data_queue0bf
-        self._out_queue0c = data_queue0c
+        self._out_queue1b = data_queue1b
+        self._out_queue1bf = data_queue1bf
+        self._out_queue1c = data_queue1c
         self._out_queue3b = data_queue3b       
+        self._out_queue7 = data_queue7
 
         #print(TAG, 'Process ready')
         #Log.d(TAG, "Process ready")
@@ -100,27 +102,27 @@ class ParserProcess(multiprocessing.Process):
         # DEBUG
     def add1b(self, data):
         """
-        Adds new raw data to internal queue0b (serial data: DEBUG amplitude).
+        Adds new raw data to internal queue1b (serial data: DEBUG amplitude).
         :param data: Raw data coming from acquisition process.
         :type data: float.
         """
-        self._out_queue0b.put(data)
+        self._out_queue1b.put(data)
 
     def add1bf(self, data):
         """
-        Adds new raw data to internal queue0bf (serial data: DEBUG frequency range of amplitude).
+        Adds new raw data to internal queue1bf (serial data: DEBUG frequency range of amplitude).
         :param data: Raw data coming from acquisition process.
         :type data: float.
         """
-        self._out_queue0bf.put(data)
+        self._out_queue1bf.put(data)
 
     def add1c(self, data):
         """
-        Adds new raw data to internal queue0c (serial data: DEBUG amplitude 2).
+        Adds new raw data to internal queue1c (serial data: DEBUG amplitude 2).
         :param data: Raw data coming from acquisition process.
         :type data: float.
         """
-        self._out_queue0c.put(data)
+        self._out_queue1c.put(data)
 
     def add3b(self, data):
         """
@@ -130,6 +132,14 @@ class ParserProcess(multiprocessing.Process):
         """
         self._out_queue3b.put(data)
         
+    def add7(self, data):
+        """
+        Adds new raw data to internal queue7 (serial data: DEBUG firmware status wariables).
+        :param data: Raw data coming from acquisition process.
+        :type data: float.
+        """
+        self._out_queue7.put(data)
+
     def stop(self):
         """
         Signals the process to stop parsing data.

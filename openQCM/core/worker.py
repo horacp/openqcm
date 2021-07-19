@@ -45,13 +45,15 @@ class Worker:
         self._queue6 = Queue() # Errors
         
         # DEBUG
-        self._queue0b = Queue() # Frequency
-        self._data0b_buffer = None 
-        self._queue0bf = Queue() # Frequency
-        self._data0bf_buffer = None 
-        self._queue0c = Queue() # Frequency
-        self._data0c_buffer = None 
+        self._queue1b = Queue() # Frequency
+        self._data1b_buffer = None 
+        self._queue1bf = Queue() # Frequency
+        self._data1bf_buffer = None 
+        self._queue1c = Queue() # Frequency
+        self._data1c_buffer = None 
         self._queue3b = Queue() # Magnitude        
+        self._queue7 = Queue() # Firmware status variables
+        self._data7_buffer = None 
         # /DEBUG
 
         # data buffers
@@ -112,7 +114,7 @@ class Worker:
         # Instantiates process
         # self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6)
         # DEBUG
-        self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6,self._queue0b,self._queue0bf,self._queue0c,self._queue3b)
+        self._parser_process = ParserProcess(self._queue1,self._queue2,self._queue3,self._queue4,self._queue5,self._queue6,self._queue1b,self._queue1bf,self._queue1c,self._queue3b,self._queue7)
         # Checks the type of source
         if self._source == SourceType.serial:
             self._acquisition_process = SerialProcess(self._parser_process)
@@ -217,26 +219,31 @@ class Worker:
             self._queue_data6(self._queue6.get(False))
     
     # DEBUG
-    def consume_queue0b(self):
-        # queue0b for serial data: DEBUG amplitude
-        while not self._queue0b.empty():
-            self._queue_data0b(self._queue0b.get(False))
+    def consume_queue1b(self):
+        # queue1b for serial data: DEBUG amplitude
+        while not self._queue1b.empty():
+            self._queue_data1b(self._queue1b.get(False))
 
-    def consume_queue0bf(self):
-        # queue0bf for serial data: DEBUG amplitude
-        while not self._queue0bf.empty():
-            self._queue_data0bf(self._queue0bf.get(False))
+    def consume_queue1bf(self):
+        # queue1bf for serial data: DEBUG amplitude
+        while not self._queue1bf.empty():
+            self._queue_data1bf(self._queue1bf.get(False))
 
-    def consume_queue0c(self):
-        # queue0c for serial data: DEBUG amplitude
-        while not self._queue0c.empty():
-            self._queue_data0c(self._queue0c.get(False))
+    def consume_queue1c(self):
+        # queue1c for serial data: DEBUG amplitude
+        while not self._queue1c.empty():
+            self._queue_data1c(self._queue1c.get(False))
 
     def consume_queue3b(self):
         # queue3b for elaborated data: resonance frequency
         while not self._queue3b.empty():
             self._queue_data3b(self._queue3b.get(False))
             
+    def consume_queue7(self):
+        # queue7 for serial data: DEBUG firmware status variables
+        while not self._queue7.empty():
+            self._queue_data7(self._queue7.get(False))
+
 
     ###########################################################################
     # Adds data to internal buffers.
@@ -303,17 +310,21 @@ class Worker:
         self._ser_err_usb = data[3]
 
     # DEBUG
-    def _queue_data0b(self,data):
+    def _queue_data1b(self,data):
         #:param data: values to add for serial data: amplitude :type data: float.
-        self._data0b_buffer = data
+        self._data1b_buffer = data
 
-    def _queue_data0bf(self,data):
+    def _queue_data1bf(self,data):
         #:param data: values to add for serial data: amplitude :type data: float.
-        self._data0bf_buffer = data
+        self._data1bf_buffer = data
 
-    def _queue_data0c(self,data):
+    def _queue_data1c(self,data):
         #:param data: values to add for serial data: amplitude :type data: float.
-        self._data0c_buffer = data
+        self._data1c_buffer = data
+
+    def _queue_data7(self,data):
+        #:param data: values to add for serial data: amplitude :type data: float.
+        self._data7_buffer = data
 
     ###########################################################################
     # Gets data buffers for plot (Amplitude,Phase,Frequency and Dissipation) 
@@ -377,17 +388,21 @@ class Worker:
         return self._ser_error1,self._ser_error2, self._control_k, self._ser_err_usb
     
     # DEBUG
-    def get_value0b_buffer(self):
+    def get_value1b_buffer(self):
         #:return: float list.
-        return self._data0b_buffer
+        return self._data1b_buffer
 
-    def get_value0bf_buffer(self):
+    def get_value1bf_buffer(self):
         #:return: float list.
-        return self._data0bf_buffer
+        return self._data1bf_buffer
 
-    def get_value0c_buffer(self):
+    def get_value1c_buffer(self):
         #:return: float list.
-        return self._data0c_buffer
+        return self._data1c_buffer
+
+    def get_value7_buffer(self):
+        #:return: float list.
+        return self._data7_buffer
 
 
     ###########################################################################
@@ -482,7 +497,7 @@ class Worker:
         #self._t3_buffer = []  # time (temperature)
 
         # DEBUG
-        # self._data0b_buffer = np.zeros(samples) # amplitude
+        # self._data1b_buffer = np.zeros(samples) # amplitude
 
         # Initialises supporting variables
         self._d1_store = 0 # Resonance frequency 
