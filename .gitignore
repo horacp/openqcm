@@ -9,3 +9,7 @@ openQCM/common/__pycache__
 openQCM/core/__pycache__
 openQCM/processors/__pycache__
 openQCM/ui/__pycache__
+openQCM/__init__.pyc
+debug_data/*
+openQCM/core/__init__.pyc
+openQCM/core/constants.pyc

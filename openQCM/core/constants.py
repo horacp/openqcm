@@ -169,7 +169,8 @@ class Constants:
     # File parameters for exporting data #
     ######################################
     # sets the slash depending on the OS types
-    if Architecture.get_os() is (OSType.macosx or OSType.linux):
+    # if Architecture.get_os() is (OSType.macosx or OSType.linux):
+    if Architecture.get_os() is (OSType.linux):
        slash="/"
     else:
        slash="\\"
