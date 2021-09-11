@@ -498,6 +498,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # MEASUREMENT: dynamic frequency and dissipation labels at run-time
         ###################################################################
         if  self._get_source() == SourceType.serial:
+            vmax = 3.3
+            bitmax = 8192 
+            ADCtoVolt = vmax / bitmax
+            VCP = 0.9
             vector1 = self.worker.get_d1_buffer()
             vector2 = self.worker.get_d2_buffer()
             vectortemp = self.worker.get_d3_buffer()
@@ -812,19 +816,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 # DEBUG
                 fitfreq=self.worker.get_value1bf_buffer()
                 yy2=self.worker.get_value1b_buffer()
-                self._plt0b.addItem(pg.PlotCurveItem(x=fitfreq,y=yy2,pen=Constants.plot_colors[8]))
+                # self._plt0b.addItem(pg.PlotCurveItem(x=fitfreq,y=yy2,pen=Constants.plot_colors[8]))
                 yy1=self.worker.get_value1c_buffer()
                 # print('YY1:',yy1)
                 # print('MAGN:',yy,'MAGN2:',yy2)
                 if yy1 is not None:
                     self._plt0c.addItem(pg.PlotCurveItem(x=self._readFREQ,y=yy1,pen=Constants.plot_colors[10]))
+                self._plt0b.addItem(pg.PlotCurveItem(x=fitfreq,y=yy2,pen=pg.mkPen(color=Constants.plot_colors[8], width=2)))
                 coef=self.worker.get_value7_buffer()
                 if coef is not None:
                     # print('\ncoeffs:',coef,' C1:',coef[1])
                     self.InfoWin.ui3.lfww.setText("<font color=#0000ff > Wait before analog read [µsec] </font>" + str(int(coef[4]))) 
                     self.InfoWin.ui3.lfws.setText("<font color=#0000ff > Average samples for analog read </font>" + str(int(coef[5])))
-                    fleft = int(self._readFREQ[0])
-                    fright = int(self._readFREQ[-1])
+                    # fleft = int(self._readFREQ[0])
+                    # fright = int(self._readFREQ[-1])
+                    fleft = int(fitfreq[0])
+                    fright = int(fitfreq[-1])
                     idx = 0
                     polyf = np.empty(fright-fleft)
                     polya = np.empty(fright-fleft)
@@ -833,13 +840,14 @@ class MainWindow(QtWidgets.QMainWindow):
                         aaa = coef[1]* iii * iii + coef[2] * iii + coef[3]
                         # if iii == 600:
                         #     print(idx,iii,fff,aaa)
-                        polya[idx] = aaa
+                        polya[idx] = (((float(aaa) * ADCtoVolt / 2) - VCP) / 0.03)
                         polyf[idx] = fff
                         # if idx % 32 == 0:
-                        #     print(idx,iii,fff,aaa)
+                        # print(idx,iii,fff,aaa)
                         idx += 1
                     # self.GraphA.plot(self.polyf,self.polya, pen=pg.mkPen(color='#808000', width=2))
-                    self._plt0d.addItem(pg.PlotCurveItem(x=polyf,y=polya - np.amax(polya) + np.amax(yy),pen=Constants.plot_colors[9]))
+                    # self._plt0d.addItem(pg.PlotCurveItem(x=polyf,y=polya - np.amax(polya) + np.amax(yy),pen=Constants.plot_colors[9]))
+                    self._plt0d.addItem(pg.PlotCurveItem(x=polyf,y=polya,pen=Constants.plot_colors[9]))
                 
             #--------------------------------------------------
             ###
